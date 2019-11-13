@@ -1,0 +1,82 @@
+apply plugin: 'java-library'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = "com.github.artfultom"
+archivesBaseName = "zallak-core"
+version = "0.0.1-SNAPSHOT"
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+test {
+    useJUnitPlatform()
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+//signing {
+//    sign configurations.archives
+//}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/content/repositories/releases/") {
+                authentication(userName: findProperty('ossrhUsername'), password: findProperty('ossrhPassword'))
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: findProperty('ossrhUsername'), password: findProperty('ossrhPassword'))
+            }
+
+            pom.project {
+                name 'zallak-core'
+                packaging 'jar'
+                description ''  // TODO
+                url 'https://github.com/artfultom/zallak-core'
+
+                scm {
+                    connection 'scm:git:https://github.com/artfultom/zallak-core.git'
+                    developerConnection 'scm:git:https://github.com/artfultom/zallak-core.git'
+                    url 'https://github.com/artfultom/zallak-core.git'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT License'
+                        url 'https://raw.githubusercontent.com/artfultom/zallak-core/master/LICENSE'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'artfultom'
+                        name 'Andrey Vasilyev'
+                        email 'artfultomcat@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
