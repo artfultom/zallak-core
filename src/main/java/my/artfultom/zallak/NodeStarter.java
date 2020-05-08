@@ -7,11 +7,15 @@ import my.artfultom.zallak.dto.SortedTuple;
 import my.artfultom.zallak.node.InitNode;
 import my.artfultom.zallak.node.MapNode;
 import my.artfultom.zallak.node.ReduceNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
 
 public class NodeStarter {
+
+    final static Logger LOGGER = LoggerFactory.getLogger(NodeStarter.class);
 
     private int poolSize;
     private Timeout timeout = Timeout.of(60, TimeUnit.SECONDS);
@@ -31,7 +35,7 @@ public class NodeStarter {
 
     public void add(MapNode node) {
         if (mapNodes.containsKey(node.getName())) {
-            System.out.println("Node '" + node.getName() + "' is already exist.");
+            LOGGER.error("Node '" + node.getName() + "' is already exist.");
         } else {
             mapNodes.put(node.getName(), node);
         }
@@ -39,7 +43,7 @@ public class NodeStarter {
 
     public void add(ReduceNode node) {
         if (reduceNodes.containsKey(node.getName())) {
-            System.out.println("Node '" + node.getName() + "' is already exist.");
+            LOGGER.error("Node '" + node.getName() + "' is already exist.");
         } else {
             reduceNodes.put(node.getName(), node);
         }
@@ -58,7 +62,7 @@ public class NodeStarter {
         final Queue<Entry<?, ?>> reduceTaskQueue = new ConcurrentLinkedQueue<>();
 
         if (this.initNode == null) {
-            System.out.println("Cannot find init node.");
+            LOGGER.error("Cannot find init node.");
         } else {
             Future<ResultList<?, ?>> initResultFuture = pool.submit(() -> initNode.execute());
 
@@ -73,13 +77,13 @@ public class NodeStarter {
                         MapNode node = mapNodes.get(mapResult.getNodeName());
 
                         if (node == null) {
-                            System.out.println("Cannot find map node by name: " + mapResult.getNodeName());
+                            LOGGER.error("Cannot find map node by name: " + mapResult.getNodeName());
                         } else {
                             CompletableFuture
                                     .supplyAsync(() -> (ResultList<?, ?>) node.execute(mapResult.getData()), pool)
                                     .whenComplete((future, error) -> {
                                         if (error != null) {
-                                            System.out.println(error.getMessage()); // TODO
+                                            LOGGER.error("Error occurred during execution of MapNode", error);
                                         }
                                     })
                                     .thenAccept(results -> {
@@ -97,7 +101,7 @@ public class NodeStarter {
                                             }
 
                                             if (error) {
-                                                System.out.println("Unknown node: " + result.getNodeName());
+                                                LOGGER.error("Unknown node: " + result.getNodeName());
                                             }
                                         }
                                     });
@@ -135,14 +139,14 @@ public class NodeStarter {
                     ReduceNode node = reduceNodes.get(nodeName);
 
                     if (node == null) {
-                        System.out.println("Cannot find reduce node by name: " + nodeName);
+                        LOGGER.error("Cannot find reduce node by name: " + nodeName);
                     } else {
                         for (SortedTuple<?> id : reduceMap.get(nodeName).keySet()) {
                             CompletableFuture
                                     .runAsync(() -> node.execute(id, reduceMap.get(nodeName).get(id)), pool)
                                     .whenComplete((future, error) -> {
                                         if (error != null) {
-                                            System.out.println(error.getMessage()); // TODO
+                                            LOGGER.error("Error occurred during execution of ReduceNode", error);
                                         }
                                     });
                         }
@@ -152,7 +156,7 @@ public class NodeStarter {
                 pool.shutdown();
                 pool.awaitTermination(timeout.getTimeout(), timeout.getUnit());
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace(); // TODO
+                LOGGER.error(e.getMessage(), e);
             }
         }
     }
