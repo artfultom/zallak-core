@@ -1,10 +1,11 @@
-apply plugin: 'java-library'
-apply plugin: 'maven'
-apply plugin: 'signing'
+plugins {
+    id 'com.bmuschko.nexus' version '2.3.1'
+    id 'java-library'
+}
 
 group = "com.github.artfultom"
 archivesBaseName = "zallak-core"
-version = "0.0.1-SNAPSHOT"
+version = "1.0.0-SNAPSHOT"
 
 repositories {
     jcenter()
@@ -18,68 +19,49 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
 test {
     useJUnitPlatform()
 }
 
-artifacts {
-    archives javadocJar, sourcesJar
-}
+modifyPom {
+    project {
+        name 'zallak-core'
+        description 'Java multithreading library'
+        url 'https://github.com/artfultom/zallak-core'
+        inceptionYear '2020'
 
-//signing {
-//    sign configurations.archives
-//}
+        scm {
+            url 'https://github.com/artfultom/zallak-core.git'
+            connection 'scm:git:https://github.com/artfultom/zallak-core.git'
+            developerConnection 'scm:git:https://github.com/artfultom/zallak-core.git'
+        }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/content/repositories/releases/") {
-                authentication(userName: findProperty('ossrhUsername'), password: findProperty('ossrhPassword'))
+        licenses {
+            license {
+                name 'MIT License'
+                url 'https://raw.githubusercontent.com/artfultom/zallak-core/master/LICENSE'
+                distribution 'repo'
             }
+        }
 
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: findProperty('ossrhUsername'), password: findProperty('ossrhPassword'))
-            }
-
-            pom.project {
-                name 'zallak-core'
-                packaging 'jar'
-                description ''  // TODO
-                url 'https://github.com/artfultom/zallak-core'
-
-                scm {
-                    connection 'scm:git:https://github.com/artfultom/zallak-core.git'
-                    developerConnection 'scm:git:https://github.com/artfultom/zallak-core.git'
-                    url 'https://github.com/artfultom/zallak-core.git'
-                }
-
-                licenses {
-                    license {
-                        name 'MIT License'
-                        url 'https://raw.githubusercontent.com/artfultom/zallak-core/master/LICENSE'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'artfultom'
-                        name 'Andrey Vasilyev'
-                        email 'artfultomcat@gmail.com'
-                    }
-                }
+        developers {
+            developer {
+                id 'artfultom'
+                name 'Andrey Vasilyev'
+                email 'artfultomcat@gmail.com'
             }
         }
     }
+}
+
+extraArchive {
+    sources = true
+    tests = true
+    javadoc = true
+}
+
+nexus {
+    sign = true
+    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 }
