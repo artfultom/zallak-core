@@ -73,7 +73,7 @@ public class NodeStarter {
                         MapNode node = mapNodes.get(mapResult.getNodeName());
 
                         if (node == null) {
-                            System.out.println("Cannot find computing node by name: " + mapResult.getNodeName());
+                            System.out.println("Cannot find map node by name: " + mapResult.getNodeName());
                         } else {
                             CompletableFuture
                                     .supplyAsync(() -> (ResultList<?, ?>) node.execute(mapResult.getData()), pool)
@@ -135,7 +135,7 @@ public class NodeStarter {
                     ReduceNode node = reduceNodes.get(nodeName);
 
                     if (node == null) {
-                        System.out.println("Cannot find computing node by name: " + nodeName);
+                        System.out.println("Cannot find reduce node by name: " + nodeName);
                     } else {
                         for (SortedTuple<?> id : reduceMap.get(nodeName).keySet()) {
                             CompletableFuture
