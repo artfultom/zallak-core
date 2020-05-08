@@ -72,7 +72,7 @@ class NodeStarterTest {
             }
         });
 
-        Map<SortedTuple, List> testResult = new ConcurrentHashMap<>();
+        Map<SortedTuple<String>, List<String>> testResult = new ConcurrentHashMap<>();
 
         starter.add(new ReduceNode<String, String>("THIRD") {
             @Override
@@ -178,7 +178,7 @@ class NodeStarterTest {
             }
         });
 
-        Map<SortedTuple, List> testResult = new ConcurrentHashMap<>();
+        Map<SortedTuple<Integer>, List<Integer>> testResult = new ConcurrentHashMap<>();
 
         starter.add(new ReduceNode<Integer, Integer>("THIRD") {
             @Override
@@ -254,14 +254,14 @@ class NodeStarterTest {
             initData.add(Entry.of("SECOND", DataMap.of(key, new ArrayList<>(list))));
         }
 
-        InitNode initNode = new InitNode<Integer, Integer>() {
+        InitNode<Integer, Integer> initNode = new InitNode<>() {
             @Override
             protected ResultList<Integer, Integer> process() {
                 return initData;
             }
         };
 
-        MapNode mapNode = new MapNode<Integer, Integer, Integer, Integer>("SECOND") {
+        MapNode<Integer, Integer, Integer, Integer> mapNode = new MapNode<>("SECOND") {
             @Override
             protected ResultList<Integer, Integer> process(DataMap<Integer, Integer> input) {
                 ResultList<Integer, Integer> result = new ResultList<>();
@@ -284,9 +284,9 @@ class NodeStarterTest {
             }
         };
 
-        Map<SortedTuple, List> testResult1 = new ConcurrentHashMap<>();
+        Map<SortedTuple<Integer>, List<Integer>> testResult1 = new ConcurrentHashMap<>();
 
-        ReduceNode reduceNode1 = new ReduceNode<Integer, Integer>("THIRD") {
+        ReduceNode<Integer, Integer> reduceNode1 = new ReduceNode<>("THIRD") {
             @Override
             protected void process(SortedTuple<Integer> key, List<List<Integer>> input) {
                 Set<Integer> letters = new HashSet<>();
@@ -316,9 +316,9 @@ class NodeStarterTest {
             }
         };
 
-        Map<SortedTuple, List> testResult2 = new ConcurrentHashMap<>();
+        Map<SortedTuple<Integer>, List<Integer>> testResult2 = new ConcurrentHashMap<>();
 
-        ReduceNode reduceNode2 = new ReduceNode<Integer, Integer>("THIRD") {
+        ReduceNode<Integer,Integer> reduceNode2 = new ReduceNode<>("THIRD") {
             @Override
             protected void process(SortedTuple<Integer> key, List<List<Integer>> input) {
                 Set<Integer> letters = new HashSet<>();
