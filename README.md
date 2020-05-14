@@ -1,2 +1,2 @@
 # zallak-core
-Parallel execution library
+Java multithreading library
