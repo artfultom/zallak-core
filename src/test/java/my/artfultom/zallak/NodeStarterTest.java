@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,11 +71,9 @@ class NodeStarterTest {
             }
         });
 
-        Map<SortedTuple<String>, List<String>> testResult = new ConcurrentHashMap<>();
-
         starter.add(new ReduceNode<String, String>("THIRD") {
             @Override
-            protected void process(SortedTuple<String> key, List<List<String>> input) {
+            protected Map<SortedTuple<String>, List<String>> process(SortedTuple<String> key, List<List<String>> input) {
                 Set<String> letters = new HashSet<>();
 
                 for (List<String> list : input) {
@@ -100,22 +97,22 @@ class NodeStarterTest {
                         .map(Map.Entry::getKey)
                         .collect(Collectors.toList());
 
-                testResult.put(key, result);
+                return Map.of(key, result);
             }
         });
 
-        starter.start();
+        Map<SortedTuple<?>, List<?>> testResult = starter.start();
 
-        assertEquals(testResult.size(), 9);
-        assertEquals(testResult.get(SortedTuple.of("A", "B")).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of("B", "C")).size(), 3);
-        assertEquals(testResult.get(SortedTuple.of("D", "E")).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of("A", "C")).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of("C", "D")).size(), 3);
-        assertEquals(testResult.get(SortedTuple.of("B", "D")).size(), 3);
-        assertEquals(testResult.get(SortedTuple.of("A", "D")).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of("B", "E")).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of("C", "E")).size(), 2);
+        assertEquals(9, testResult.size(), 9);
+        assertEquals(2, testResult.get(SortedTuple.of("A", "B")).size());
+        assertEquals(3, testResult.get(SortedTuple.of("B", "C")).size());
+        assertEquals(2, testResult.get(SortedTuple.of("D", "E")).size());
+        assertEquals(2, testResult.get(SortedTuple.of("A", "C")).size());
+        assertEquals(3, testResult.get(SortedTuple.of("C", "D")).size());
+        assertEquals(3, testResult.get(SortedTuple.of("B", "D")).size());
+        assertEquals(2, testResult.get(SortedTuple.of("A", "D")).size());
+        assertEquals(2, testResult.get(SortedTuple.of("B", "E")).size());
+        assertEquals(2, testResult.get(SortedTuple.of("C", "E")).size());
     }
 
     @Test
@@ -178,11 +175,9 @@ class NodeStarterTest {
             }
         });
 
-        Map<SortedTuple<Integer>, List<Integer>> testResult = new ConcurrentHashMap<>();
-
         starter.add(new ReduceNode<Integer, Integer>("THIRD") {
             @Override
-            protected void process(SortedTuple<Integer> key, List<List<Integer>> input) {
+            protected Map<SortedTuple<Integer>, List<Integer>> process(SortedTuple<Integer> key, List<List<Integer>> input) {
                 Set<Integer> letters = new HashSet<>();
 
                 for (List<Integer> list : input) {
@@ -206,22 +201,22 @@ class NodeStarterTest {
                         .map(Map.Entry::getKey)
                         .collect(Collectors.toList());
 
-                testResult.put(key, result);
+                return Map.of(key, result);
             }
         });
 
-        starter.start();
+        Map<SortedTuple<?>, List<?>> testResult = starter.start();
 
-        assertEquals(testResult.size(), 9);
-        assertEquals(testResult.get(SortedTuple.of(1, 2)).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of(2, 3)).size(), 3);
-        assertEquals(testResult.get(SortedTuple.of(4, 5)).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of(1, 3)).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of(3, 4)).size(), 3);
-        assertEquals(testResult.get(SortedTuple.of(2, 4)).size(), 3);
-        assertEquals(testResult.get(SortedTuple.of(1, 4)).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of(2, 5)).size(), 2);
-        assertEquals(testResult.get(SortedTuple.of(3, 5)).size(), 2);
+        assertEquals(9, testResult.size());
+        assertEquals(2, testResult.get(SortedTuple.of(1, 2)).size());
+        assertEquals(3, testResult.get(SortedTuple.of(2, 3)).size());
+        assertEquals(2, testResult.get(SortedTuple.of(4, 5)).size());
+        assertEquals(2, testResult.get(SortedTuple.of(1, 3)).size());
+        assertEquals(3, testResult.get(SortedTuple.of(3, 4)).size());
+        assertEquals(3, testResult.get(SortedTuple.of(2, 4)).size());
+        assertEquals(2, testResult.get(SortedTuple.of(1, 4)).size());
+        assertEquals(2, testResult.get(SortedTuple.of(2, 5)).size());
+        assertEquals(2, testResult.get(SortedTuple.of(3, 5)).size());
     }
 
     @Test
@@ -284,11 +279,9 @@ class NodeStarterTest {
             }
         };
 
-        Map<SortedTuple<Integer>, List<Integer>> testResult1 = new ConcurrentHashMap<>();
-
         ReduceNode<Integer, Integer> reduceNode1 = new ReduceNode<>("THIRD") {
             @Override
-            protected void process(SortedTuple<Integer> key, List<List<Integer>> input) {
+            protected Map<SortedTuple<Integer>, List<Integer>> process(SortedTuple<Integer> key, List<List<Integer>> input) {
                 Set<Integer> letters = new HashSet<>();
 
                 for (List<Integer> list : input) {
@@ -312,15 +305,13 @@ class NodeStarterTest {
                         .map(Map.Entry::getKey)
                         .collect(Collectors.toList());
 
-                testResult1.put(key, result);
+                return Map.of(key, result);
             }
         };
 
-        Map<SortedTuple<Integer>, List<Integer>> testResult2 = new ConcurrentHashMap<>();
-
-        ReduceNode<Integer,Integer> reduceNode2 = new ReduceNode<>("THIRD") {
+        ReduceNode<Integer, Integer> reduceNode2 = new ReduceNode<>("THIRD") {
             @Override
-            protected void process(SortedTuple<Integer> key, List<List<Integer>> input) {
+            protected Map<SortedTuple<Integer>, List<Integer>> process(SortedTuple<Integer> key, List<List<Integer>> input) {
                 Set<Integer> letters = new HashSet<>();
 
                 for (List<Integer> list : input) {
@@ -344,7 +335,7 @@ class NodeStarterTest {
                         .map(Map.Entry::getKey)
                         .collect(Collectors.toList());
 
-                testResult2.put(key, result);
+                return Map.of(key, result);
             }
         };
 
@@ -352,13 +343,13 @@ class NodeStarterTest {
         starter1.add(initNode);
         starter1.add(mapNode);
         starter1.add(reduceNode1);
-        starter1.start();
+        Map<SortedTuple<?>, List<?>> testResult1 = starter1.start();
 
         NodeStarter starter2 = new NodeStarter(10);
         starter2.add(initNode);
         starter2.add(mapNode);
         starter2.add(reduceNode2);
-        starter2.start();
+        Map<SortedTuple<?>, List<?>> testResult2 = starter2.start();
 
         assertEquals(testResult1, testResult2);
     }

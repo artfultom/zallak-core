@@ -49,7 +49,7 @@ public class NodeStarter {
         }
     }
 
-    public void start() {
+    public Map<SortedTuple<?>, List<?>> start() {
         final ThreadPoolExecutor pool = new ThreadPoolExecutor(
                 poolSize,
                 poolSize,
@@ -135,6 +135,8 @@ public class NodeStarter {
                     }
                 }
 
+                final Map<SortedTuple<?>, List<?>> testResult = new ConcurrentHashMap<>();
+
                 for (String nodeName : reduceMap.keySet()) {
                     ReduceNode node = reduceNodes.get(nodeName);
 
@@ -143,7 +145,7 @@ public class NodeStarter {
                     } else {
                         for (SortedTuple<?> id : reduceMap.get(nodeName).keySet()) {
                             CompletableFuture
-                                    .runAsync(() -> node.execute(id, reduceMap.get(nodeName).get(id)), pool)
+                                    .runAsync(() -> testResult.putAll(node.execute(id, reduceMap.get(nodeName).get(id))), pool)
                                     .whenComplete((future, error) -> {
                                         if (error != null) {
                                             LOGGER.error("Error occurred during execution of ReduceNode", error);
@@ -155,9 +157,13 @@ public class NodeStarter {
 
                 pool.shutdown();
                 pool.awaitTermination(timeout.getTimeout(), timeout.getUnit());
+
+                return testResult;
             } catch (InterruptedException | ExecutionException e) {
                 LOGGER.error(e.getMessage(), e);
             }
         }
+
+        return null;
     }
 }
