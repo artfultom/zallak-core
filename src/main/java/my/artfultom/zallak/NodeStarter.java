@@ -80,14 +80,14 @@ public class NodeStarter {
                             LOGGER.error("Cannot find map node by name: " + mapResult.getNodeName());
                         } else {
                             CompletableFuture
-                                    .supplyAsync(() -> (ResultList<KOut, VOut>) node.execute(mapResult.getData()), pool)
+                                    .supplyAsync(() -> (ResultList<?, ?>) node.execute(mapResult.getData()), pool)
                                     .whenComplete((future, error) -> {
                                         if (error != null) {
                                             LOGGER.error("Error occurred during execution of MapNode", error);
                                         }
                                     })
                                     .thenAccept(results -> {
-                                        for (Entry<KOut, VOut> result : results) {
+                                        for (Entry<?, ?> result : results) {
                                             boolean error = true;
 
                                             if (mapNodes.containsKey(result.getNodeName())) {
@@ -96,7 +96,7 @@ public class NodeStarter {
                                             }
 
                                             if (reduceNodes.containsKey(result.getNodeName())) {
-                                                reduceTaskQueue.add(result);
+                                                reduceTaskQueue.add((Entry<KOut, VOut>) result);
                                                 error = false;
                                             }
 
