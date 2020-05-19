@@ -29,11 +29,11 @@ public class NodeStarter {
         this.poolSize = poolSize;
     }
 
-    public void add(InitNode node) {
+    public void add(InitNode<?, ?> node) {
         this.initNode = node;
     }
 
-    public void add(MapNode node) {
+    public void add(MapNode<?, ?, ?, ?> node) {
         if (mapNodes.containsKey(node.getName())) {
             LOGGER.error("Node '" + node.getName() + "' is already exist.");
         } else {
@@ -41,7 +41,7 @@ public class NodeStarter {
         }
     }
 
-    public void add(ReduceNode node) {
+    public void add(ReduceNode<?, ?> node) {
         if (reduceNodes.containsKey(node.getName())) {
             LOGGER.error("Node '" + node.getName() + "' is already exist.");
         } else {
@@ -49,7 +49,7 @@ public class NodeStarter {
         }
     }
 
-    public Map<SortedTuple<?>, List<?>> start() {
+    public <KOut, VOut> Map<SortedTuple<KOut>, List<VOut>> start() {
         final ThreadPoolExecutor pool = new ThreadPoolExecutor(
                 poolSize,
                 poolSize,
@@ -59,7 +59,7 @@ public class NodeStarter {
         );
 
         final Queue<Entry<?, ?>> mapTaskQueue = new ConcurrentLinkedQueue<>();
-        final Queue<Entry<?, ?>> reduceTaskQueue = new ConcurrentLinkedQueue<>();
+        final Queue<Entry<KOut, VOut>> reduceTaskQueue = new ConcurrentLinkedQueue<>();
 
         if (this.initNode == null) {
             LOGGER.error("Cannot find init node.");
@@ -80,14 +80,14 @@ public class NodeStarter {
                             LOGGER.error("Cannot find map node by name: " + mapResult.getNodeName());
                         } else {
                             CompletableFuture
-                                    .supplyAsync(() -> (ResultList<?, ?>) node.execute(mapResult.getData()), pool)
+                                    .supplyAsync(() -> (ResultList<KOut, VOut>) node.execute(mapResult.getData()), pool)
                                     .whenComplete((future, error) -> {
                                         if (error != null) {
                                             LOGGER.error("Error occurred during execution of MapNode", error);
                                         }
                                     })
                                     .thenAccept(results -> {
-                                        for (Entry<?, ?> result : results) {
+                                        for (Entry<KOut, VOut> result : results) {
                                             boolean error = true;
 
                                             if (mapNodes.containsKey(result.getNodeName())) {
@@ -109,11 +109,11 @@ public class NodeStarter {
                     }
                 }
 
-                Map<String, Map<SortedTuple<?>, List<List<?>>>> reduceMap = new HashMap<>();
+                Map<String, Map<SortedTuple<KOut>, List<List<VOut>>>> reduceMap = new HashMap<>();
 
-                for (Entry<?, ?> task : reduceTaskQueue) {
-                    for (SortedTuple key : task.getData().keySet()) {
-                        Map<SortedTuple<?>, List<List<?>>> map;
+                for (Entry<KOut, VOut> task : reduceTaskQueue) {
+                    for (SortedTuple<KOut> key : task.getData().keySet()) {
+                        Map<SortedTuple<KOut>, List<List<VOut>>> map;
 
                         if (reduceMap.containsKey(task.getNodeName())) {
                             map = reduceMap.get(task.getNodeName());
@@ -128,22 +128,22 @@ public class NodeStarter {
                         });
 
                         map.computeIfAbsent(key, (k) -> {
-                            List<List<?>> list = new ArrayList<>();
+                            List<List<VOut>> list = new ArrayList<>();
                             list.add(task.getData().get(key));
                             return list;
                         });
                     }
                 }
 
-                final Map<SortedTuple<?>, List<?>> testResult = new ConcurrentHashMap<>();
+                final Map<SortedTuple<KOut>, List<VOut>> testResult = new ConcurrentHashMap<>();
 
                 for (String nodeName : reduceMap.keySet()) {
-                    ReduceNode node = reduceNodes.get(nodeName);
+                    ReduceNode<KOut, VOut> node = reduceNodes.get(nodeName);
 
                     if (node == null) {
                         LOGGER.error("Cannot find reduce node by name: " + nodeName);
                     } else {
-                        for (SortedTuple<?> id : reduceMap.get(nodeName).keySet()) {
+                        for (SortedTuple<KOut> id : reduceMap.get(nodeName).keySet()) {
                             CompletableFuture
                                     .runAsync(() -> testResult.putAll(node.execute(id, reduceMap.get(nodeName).get(id))), pool)
                                     .whenComplete((future, error) -> {

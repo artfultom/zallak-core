@@ -101,7 +101,7 @@ class NodeStarterTest {
             }
         });
 
-        Map<SortedTuple<?>, List<?>> testResult = starter.start();
+        Map<SortedTuple<String>, List<String>> testResult = starter.start();
 
         assertEquals(9, testResult.size(), 9);
         assertEquals(2, testResult.get(SortedTuple.of("A", "B")).size());
@@ -205,7 +205,7 @@ class NodeStarterTest {
             }
         });
 
-        Map<SortedTuple<?>, List<?>> testResult = starter.start();
+        Map<SortedTuple<Integer>, List<Integer>> testResult = starter.start();
 
         assertEquals(9, testResult.size());
         assertEquals(2, testResult.get(SortedTuple.of(1, 2)).size());
@@ -343,13 +343,13 @@ class NodeStarterTest {
         starter1.add(initNode);
         starter1.add(mapNode);
         starter1.add(reduceNode1);
-        Map<SortedTuple<?>, List<?>> testResult1 = starter1.start();
+        Map<SortedTuple<Integer>, List<Integer>> testResult1 = starter1.start();
 
         NodeStarter starter2 = new NodeStarter(10);
         starter2.add(initNode);
         starter2.add(mapNode);
         starter2.add(reduceNode2);
-        Map<SortedTuple<?>, List<?>> testResult2 = starter2.start();
+        Map<SortedTuple<Integer>, List<Integer>> testResult2 = starter2.start();
 
         assertEquals(testResult1, testResult2);
     }
